@@ -1,0 +1,37 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Node.js 20 LTS (required for Claude Code)
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    git \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude Code globally
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create non-root user for volume permissions
+# NOTE: Set -u to your host UID (run `id -u` to check). 501 is default on macOS.
+ARG HOST_UID=501
+RUN useradd -m -u ${HOST_UID} -s /bin/bash claude
+
+# Symlink so plugin marketplace paths from macOS host resolve inside container
+# Replace <YOUR_USERNAME> with your macOS username, or remove this block on Linux
+ARG HOST_USERNAME=""
+RUN if [ -n "$HOST_USERNAME" ]; then \
+      mkdir -p /Users/${HOST_USERNAME}/ \
+      && ln -sf /home/claude/.claude /Users/${HOST_USERNAME}/.claude \
+      && chown -h claude:claude /Users/${HOST_USERNAME} /Users/${HOST_USERNAME}/.claude; \
+    fi
+
+USER claude
+WORKDIR /workspace
+
+COPY --chown=claude:claude entrypoint.claude.sh /entrypoint.claude.sh
+RUN chmod +x /entrypoint.claude.sh
+
+ENTRYPOINT ["/entrypoint.claude.sh"]
