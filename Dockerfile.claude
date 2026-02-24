@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     git \
     tmux \
+    zsh \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
@@ -18,7 +19,7 @@ RUN npm install -g @anthropic-ai/claude-code
 # Create non-root user for volume permissions
 # NOTE: Set -u to your host UID (run `id -u` to check). 501 is default on macOS.
 ARG HOST_UID=501
-RUN useradd -m -u ${HOST_UID} -s /bin/bash claude
+RUN useradd -m -u ${HOST_UID} -s /bin/zsh claude
 
 # Symlink so plugin marketplace paths from macOS host resolve inside container
 # Replace <YOUR_USERNAME> with your macOS username, or remove this block on Linux
@@ -31,6 +32,8 @@ RUN if [ -n "$HOST_USERNAME" ]; then \
 
 USER claude
 WORKDIR /workspace
+
+ENV CLOD="claude --dangerously-skip-permissions"
 
 COPY --chown=claude:claude entrypoint.claude.sh /entrypoint.claude.sh
 RUN chmod +x /entrypoint.claude.sh
