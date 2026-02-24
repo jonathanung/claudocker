@@ -1,6 +1,18 @@
-#!/bin/bash
-set -e
+clod-join(){
+    local shell="/bin/bash"
+    local container=""
 
-CONTAINER="${1:-claude-workspace}"
+    for arg in "$@"; do
+        case "$arg" in
+            -t|--tmux) shell="tmux new-session -s workspace" ;;
+            -z|--zsh) shell="/bin/zsh" ;;
+            *) container="$arg" ;;
+        esac
+    done
 
-docker exec -it "$CONTAINER" tmux new-session
+    container="${container:-claude-workspace}"
+
+    docker exec -it "$container" $shell
+}
+
+clod-join "$@"
