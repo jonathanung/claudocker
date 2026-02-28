@@ -13,21 +13,45 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y locales && \
+    locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
 # Install Claude Code globally
 RUN npm install -g @anthropic-ai/claude-code
 
 # Create non-root user for volume permissions
 # NOTE: Set -u to your host UID (run `id -u` to check). 501 is default on macOS.
 ARG HOST_UID=501
-RUN useradd -m -u ${HOST_UID} -s /bin/zsh claude
+RUN EVICTED_HOME="" && \
+    existing_user=$(getent passwd ${HOST_UID} | cut -d: -f1) && \
+    if [ -n "$existing_user" ]; then \
+      EVICTED_HOME=$(getent passwd ${HOST_UID} | cut -d: -f6) && \
+      userdel "$existing_user" && \
+      rm -rf "$EVICTED_HOME"; \
+    fi && \
+    useradd -m -u ${HOST_UID} -s /bin/zsh claude && \
+    if [ -n "$EVICTED_HOME" ] && [ "$EVICTED_HOME" != "/home/claude" ]; then \
+      mkdir -p "$EVICTED_HOME" && \
+      ln -sf /home/claude/.claude "$EVICTED_HOME/.claude" && \
+      chown -h claude:claude "$EVICTED_HOME" "$EVICTED_HOME/.claude"; \
+    fi
+# RUN useradd -m -u ${HOST_UID} -s /bin/zsh claude
 
 # Symlink so plugin marketplace paths from macOS host resolve inside container
 # Replace <YOUR_USERNAME> with your macOS username, or remove this block on Linux
 ARG HOST_USERNAME=""
+ARG HOST_OS="Darwin"
 RUN if [ -n "$HOST_USERNAME" ]; then \
-      mkdir -p /Users/${HOST_USERNAME}/ \
-      && ln -sf /home/claude/.claude /Users/${HOST_USERNAME}/.claude \
-      && chown -h claude:claude /Users/${HOST_USERNAME} /Users/${HOST_USERNAME}/.claude; \
+      if [ "$HOST_OS" = "Darwin" ]; then \
+        HOST_HOME="/Users/${HOST_USERNAME}"; \
+      else \
+        HOST_HOME="/home/${HOST_USERNAME}"; \
+      fi && \
+      mkdir -p "$HOST_HOME" && \
+      ln -sf /home/claude/.claude "$HOST_HOME/.claude" && \
+      chown -h claude:claude "$HOST_HOME" "$HOST_HOME/.claude"; \
     fi
 
 USER claude
