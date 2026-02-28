@@ -55,6 +55,10 @@ RUN if [ -n "$HOST_USERNAME" ]; then \
     fi
 
 USER claude
+
+# Install Oh My Zsh for the claude user
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
 WORKDIR /workspace
 
 ENV CLOD="claude --dangerously-skip-permissions"

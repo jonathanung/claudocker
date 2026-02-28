@@ -16,4 +16,4 @@ if [ ! -f /home/claude/.claude.json ]; then
     fi
 fi
 
-exec tmux new-session -s workspace
+exec tmux new-session -s workspace "zsh"
