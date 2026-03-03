@@ -17,21 +17,62 @@ mkdir project && cp -r /path/to/your/repo/* project/
 ./claudocker.sh
 ```
 
-Claude Code starts in `/workspace` with full permissions — no approval prompts.
+Claude Code starts inside a **tmux session** in `/workspace` with full permissions — no approval prompts.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `Dockerfile.claude` | Builds an Ubuntu 24.04 image with Node.js 20 and Claude Code |
-| `entrypoint.claude.sh` | Marks `/workspace` as git-safe, then runs `claude --dangerously-skip-permissions` |
+| `Dockerfile.claude` | Builds an Ubuntu 24.04 image with Claude Code (native installer), Oh My Zsh, and tmux |
+| `entrypoint.claude.sh` | Marks `/workspace` as git-safe, registers the `clod` alias, restores `.claude.json` from backup if missing, and launches a tmux session |
 | `claudocker.sh` | Build + run helper — mounts your project and `~/.claude` auth into the container |
+| `claudocker-join.sh` | Join a running container (provides the `clod-join` function with tmux/zsh options) |
+
+## Usage
+
+### Running Claude Code
+
+Once inside the container, you can start Claude Code with:
+
+```bash
+claude --dangerously-skip-permissions
+# or use the alias
+clod
+```
+
+### Joining a Running Container
+
+Source or run `claudocker-join.sh` to attach to an existing container:
+
+```bash
+# Default (bash shell, container name "claude-workspace")
+./claudocker-join.sh
+
+# Join with zsh
+./claudocker-join.sh --zsh
+
+# Join with a new tmux session
+./claudocker-join.sh --tmux
+
+# Join a specific container
+./claudocker-join.sh my-container-name
+```
+
+### Passing Extra Args
+
+Any arguments to `claudocker.sh` are forwarded to the entrypoint:
+
+```bash
+./claudocker.sh -p "fix the tests"
+```
 
 ## Configuration
 
 ### Host UID (Linux users)
 
-The default UID is `501` (macOS default). If your host UID differs, pass it at build time:
+The default UID is `501` (macOS default). `claudocker.sh` automatically passes your host UID via `--build-arg HOST_UID=$(id -u)`.
+
+To build manually:
 
 ```bash
 docker build --build-arg HOST_UID=$(id -u) -f Dockerfile.claude -t claude-workspace .
@@ -39,18 +80,10 @@ docker build --build-arg HOST_UID=$(id -u) -f Dockerfile.claude -t claude-worksp
 
 ### macOS Plugin Symlink
 
-If you use Claude Code plugins installed on macOS, the container needs a symlink so the host paths resolve. Pass your macOS username at build time:
+If you use Claude Code plugins installed on macOS, the container needs a symlink so the host paths resolve. `claudocker.sh` handles this automatically. To build manually:
 
 ```bash
 docker build --build-arg HOST_USERNAME=$(whoami) -f Dockerfile.claude -t claude-workspace .
-```
-
-### Passing Extra Args
-
-Any arguments to `claudocker.sh` are forwarded to `claude`:
-
-```bash
-./claudocker.sh -p "fix the tests"
 ```
 
 ## Security Warning

@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Node.js 20 LTS (required for Claude Code)
+# Install system dependencies + Node.js 20 LTS (needed for hooks/TypeScript)
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
@@ -10,17 +10,18 @@ RUN apt-get update && apt-get install -y \
     tmux \
     python3 \
     zsh \
+    jq \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
+
+# Install TypeScript globally
+RUN npm install -g typescript ts-node
 
 RUN apt-get update && apt-get install -y locales && \
     locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
-
-# Install Claude Code globally
-RUN npm install -g @anthropic-ai/claude-code
 
 # Create non-root user for volume permissions
 # NOTE: Set -u to your host UID (run `id -u` to check). 501 is default on macOS.
@@ -38,7 +39,6 @@ RUN EVICTED_HOME="" && \
       ln -sf /home/claude/.claude "$EVICTED_HOME/.claude" && \
       chown -h claude:claude "$EVICTED_HOME" "$EVICTED_HOME/.claude"; \
     fi
-# RUN useradd -m -u ${HOST_UID} -s /bin/zsh claude
 
 # Symlink so plugin marketplace paths from macOS host resolve inside container
 # Replace <YOUR_USERNAME> with your macOS username, or remove this block on Linux
@@ -59,6 +59,10 @@ USER claude
 
 # Install Oh My Zsh for the claude user
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# Install Claude Code via native installer (no Node.js required)
+RUN curl -fsSL https://claude.ai/install.sh | sh
+ENV PATH="/home/claude/.claude/local/bin:$PATH"
 
 WORKDIR /workspace
 
