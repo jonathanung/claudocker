@@ -61,8 +61,10 @@ USER claude
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 # Install Claude Code via native installer (no Node.js required)
-RUN curl -fsSL https://claude.ai/install.sh | sh
-ENV PATH="/home/claude/.claude/local/bin:$PATH"
+RUN curl -fsSL https://claude.ai/install.sh | bash
+# Remove build-time .claude.json so the entrypoint can restore auth from backup
+RUN rm -f /home/claude/.claude.json
+ENV PATH="/home/claude/.local/bin:$PATH"
 
 WORKDIR /workspace
 

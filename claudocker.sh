@@ -13,4 +13,5 @@ docker build -f "$SCRIPT_DIR/Dockerfile.claude" -t claude-workspace "$SCRIPT_DIR
 docker run -it --rm \
   -v "$SCRIPT_DIR/project:/workspace" \
   -v ~/.claude:/home/claude/.claude \
+  -v ~/.claude.json:/home/claude/.claude.json \
   claude-workspace "$@"
