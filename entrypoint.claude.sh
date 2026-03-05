@@ -4,8 +4,14 @@ set -e
 # Mark mounted volume as safe for git
 git config --global --add safe.directory /workspace
 
-# Register clod alias for zsh
-echo 'alias clod="claude --dangerously-skip-permissions"' >> /home/claude/.zshrc
+# Register aliases for skip-permissions modes
+cat >> /home/claude/.zshrc << 'EOF'
+alias clod="claude --dangerously-skip-permissions"
+alias yolo-cursor="agent --force"
+alias yolo-oc="opencode --dangerously-skip-permissions"
+alias yolo-gem="gemini --yolo"
+alias yolo-codex="codex --yolo"
+EOF
 
 # Restore .claude.json from backup if missing
 if [ ! -f /home/claude/.claude.json ]; then

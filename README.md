@@ -1,11 +1,22 @@
-# Claude Code Docker Workspace
+# AI Coding Agent Docker Workspace
 
-Run [Claude Code](https://github.com/anthropics/claude-code) in a sandboxed Docker container with `--dangerously-skip-permissions` enabled.
+Run AI coding agents in a sandboxed Docker container with permissions bypassed for autonomous operation.
+
+## Included Tools
+
+| Tool | Skip-permissions alias | Underlying command |
+|---|---|---|
+| [Claude Code](https://github.com/anthropics/claude-code) | `clod` | `claude --dangerously-skip-permissions` |
+| [Cursor CLI](https://cursor.com/blog/cli) | `yolo-cursor` | `agent --force` |
+| [OpenCode](https://opencode.ai) | `yolo-oc` | `opencode --dangerously-skip-permissions` |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `yolo-gem` | `gemini --yolo` |
+| [Codex CLI](https://github.com/openai/codex) | `yolo-codex` | `codex --yolo` |
 
 ## Prerequisites
 
 - Docker
-- An Anthropic API key (set `ANTHROPIC_API_KEY` in your environment), **or** an existing `~/.claude` directory from a prior `claude` login
+- API keys for the tools you want to use (e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `CURSOR_API_KEY`)
+- **Or** an existing `~/.claude` directory from a prior `claude` login (for Claude Code)
 
 ## Quick Start
 
@@ -17,27 +28,38 @@ mkdir project && cp -r /path/to/your/repo/* project/
 ./claudocker.sh
 ```
 
-Claude Code starts inside a **tmux session** in `/workspace` with full permissions — no approval prompts.
+The container launches a **tmux session** in `/workspace`. Use any of the aliases above to start an agent.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `Dockerfile.claude` | Builds an Ubuntu 24.04 image with Claude Code (native installer), Oh My Zsh, and tmux |
-| `entrypoint.claude.sh` | Marks `/workspace` as git-safe, registers the `clod` alias, restores `.claude.json` from backup if missing, and launches a tmux session |
+| `Dockerfile.claude` | Ubuntu 24.04 image with all five AI coding tools, Node.js 20, TypeScript, Oh My Zsh, and tmux |
+| `entrypoint.claude.sh` | Marks `/workspace` as git-safe, registers all aliases, restores `.claude.json` from backup if missing, and launches a tmux session |
 | `claudocker.sh` | Build + run helper — mounts your project and `~/.claude` auth into the container |
 | `claudocker-join.sh` | Join a running container (provides the `clod-join` function with tmux/zsh options) |
 
 ## Usage
 
-### Running Claude Code
+### Running an Agent
 
-Once inside the container, you can start Claude Code with:
+Once inside the container:
 
 ```bash
-claude --dangerously-skip-permissions
-# or use the alias
+# Claude Code
 clod
+
+# Cursor
+yolo-cursor
+
+# OpenCode
+yolo-oc
+
+# Gemini CLI
+yolo-gem
+
+# Codex CLI
+yolo-codex
 ```
 
 ### Joining a Running Container
@@ -88,4 +110,4 @@ docker build --build-arg HOST_USERNAME=$(whoami) -f Dockerfile.claude -t claude-
 
 ## Security Warning
 
-`--dangerously-skip-permissions` gives Claude Code unrestricted shell access inside the container. The Docker boundary provides isolation, but review the mounted volumes — anything mounted in is accessible. Do not mount sensitive directories you don't want Claude to read or modify.
+The skip-permissions aliases give each tool unrestricted shell access inside the container. The Docker boundary provides isolation, but review the mounted volumes — anything mounted in is accessible. Do not mount sensitive directories you don't want the agents to read or modify.

@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install TypeScript globally
-RUN npm install -g typescript ts-node
+# Install TypeScript and npm-based CLI tools
+RUN npm install -g typescript ts-node @google/gemini-cli @openai/codex
 
 RUN apt-get update && apt-get install -y locales && \
     locale-gen en_US.UTF-8
@@ -60,10 +60,17 @@ USER claude
 # Install Oh My Zsh for the claude user
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-# Install Claude Code via native installer (no Node.js required)
+# Install Claude Code via native installer
 RUN curl -fsSL https://claude.ai/install.sh | bash
 # Remove build-time .claude.json so the entrypoint can restore auth from backup
 RUN rm -f /home/claude/.claude.json
+
+# Install Cursor CLI (agent)
+RUN curl https://cursor.com/install -fsSL | bash
+
+# Install OpenCode
+RUN curl -fsSL https://opencode.ai/install | bash
+
 ENV PATH="/home/claude/.local/bin:$PATH"
 
 WORKDIR /workspace
