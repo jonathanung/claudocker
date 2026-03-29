@@ -52,8 +52,14 @@ RUN if [ -n "$HOST_USERNAME" ]; then \
       fi && \
       mkdir -p "$HOST_HOME" && \
       ln -sf /home/claude/.claude "$HOST_HOME/.claude" && \
-      chown -h claude:claude "$HOST_HOME" "$HOST_HOME/.claude"; \
+      mkdir -p "$HOST_HOME/.config" && \
+      ln -sf /home/claude/.config/opencode "$HOST_HOME/.config/opencode" && \
+      chown -h claude:claude "$HOST_HOME" "$HOST_HOME/.claude" \
+        "$HOST_HOME/.config" "$HOST_HOME/.config/opencode"; \
     fi
+
+# Ensure .config dir exists for opencode mount point
+RUN mkdir -p /home/claude/.config/opencode && chown -R claude:claude /home/claude/.config
 
 USER claude
 

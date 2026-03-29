@@ -14,4 +14,5 @@ docker run -it --rm \
   -v "$SCRIPT_DIR/project:/workspace" \
   -v ~/.claude:/home/claude/.claude \
   -v ~/.claude.json:/home/claude/.claude.json \
+  -v ~/.config/opencode:/home/claude/.config/opencode \
   claude-workspace "$@"
